@@ -1,0 +1,139 @@
+I am continuing my PostgreSQL-to-S3 ETL project. Please remember/understand the following project context before answering.
+
+PROJECT GOAL:
+I am building an ETL/data pipeline using Apache Spark/PySpark. The main purpose is to extract data from PostgreSQL, transform it using PySpark, and load it into AWS S3.
+
+IMPORTANT:
+- I specifically want to use PySpark/Apache Spark as the ETL engine.
+- Do NOT use pandas for the ETL.
+- Do NOT use psycopg2 as the main extraction method.
+- Do NOT use boto3 as the main S3 loading method.
+- PostgreSQL should be connected to Spark using JDBC.
+- Spark should write to S3 using the S3A connector.
+- I want to learn Spark properly through this project.
+
+CURRENT SIMPLE ARCHITECTURE:
+
+PostgreSQL
+     ↓
+PySpark using JDBC
+     ↓
+PySpark Transformation
+     ↓
+Duplicate Checking
+     ↓
+Split into 200-row batches
+     ↓
+S3 using S3A
+
+POSTGRESQL DATA:
+- My existing database data is random/non-sequential.
+- The ID/order_id cannot be assumed to be sequential.
+- Therefore, do NOT use only MAX(order_id) for incremental loading.
+- I want to prevent duplicate records when new data is inserted into PostgreSQL.
+- Use a control/processed-ID table and Spark LEFT ANTI JOIN or another proper Spark-based incremental strategy.
+- Only records that have not already been processed should be loaded to S3.
+- If I add new records to PostgreSQL in the future, the next pipeline run should pick them up automatically.
+- Existing records should never be uploaded to S3 again.
+
+S3 REQUIREMENT:
+- I already have data in S3.
+- Each CSV file should contain a maximum/exact batch size of 200 rows where applicable.
+- Example:
+    450 new records
+    → batch_001.csv = 200 rows
+    → batch_002.csv = 200 rows
+    → batch_003.csv = 50 rows
+- New files should be created instead of overwriting existing files.
+
+PYSPARK TRANSFORMATION:
+I want actual Spark transformations, not just splitting files.
+Include transformations such as:
+- Remove duplicate records
+- Handle NULL values
+- Cast columns to proper data types
+- Clean/standardize columns
+- Create useful derived columns such as total_amount where appropriate
+- Validate data
+- Then create 200-row batches
+- Keep transformations in a separate transform.py file
+
+CURRENT VS CODE STRUCTURE:
+
+postgres-to-s3/
+│
+├── src/
+│   ├── spark_session.py
+│   ├── extract.py
+│   ├── transform.py
+│   ├── load.py
+│   └── main.py
+│
+├── sql/
+│   ├── create_control_table.sql
+│   └── incremental_query.sql
+│
+├── jars/
+│   └── PostgreSQL JDBC driver
+│
+├── .env
+├── .gitignore
+├── requirements.txt
+└── README.md
+
+PREFERRED CODE ARCHITECTURE:
+
+spark_session.py
+    → Create SparkSession and configure JDBC/S3A
+
+extract.py
+    → Read PostgreSQL using Spark JDBC
+    → Identify only new/unprocessed records
+
+transform.py
+    → Perform PySpark transformations
+    → Deduplicate
+    → Handle NULLs
+    → Cast types
+    → Create derived columns
+    → Prepare final DataFrame
+
+load.py
+    → Use Spark to write CSV files to S3 through S3A
+    → Create batches of 200 rows
+    → Do not overwrite previous batches
+
+main.py
+    → Orchestrate the complete pipeline
+
+SQL:
+create_control_table.sql
+    → Create table that tracks successfully processed IDs
+
+incremental_query.sql
+    → Query/logic for identifying unprocessed records
+
+IMPORTANT LEARNING STYLE:
+- Explain everything step by step.
+- Give complete code that I can copy into VS Code.
+- Tell me exactly which file each code belongs to.
+- Explain why we are using each Spark function.
+- Don't unnecessarily add SNS, SQS, Lambda, Glue, Athena, etc. yet.
+- First help me complete the simple PostgreSQL → PySpark → S3 pipeline.
+- After the basic pipeline works, we can extend it to other AWS services.
+- Keep the architecture simple and industry-oriented.
+- If there is a better Spark/industry practice than my approach, explain it before changing it.
+
+CURRENT MAIN REQUIREMENT:
+Build and debug this project step by step until:
+1. PostgreSQL connects to Spark through JDBC.
+2. Spark reads the PostgreSQL data.
+3. Spark identifies only new/unprocessed records.
+4. Spark performs transformations.
+5. Duplicate records are prevented.
+6. Data is divided into 200-row CSV batches.
+7. Spark writes those files to S3 using S3A.
+8. When I insert new random records into PostgreSQL later, running the pipeline adds only those new records to S3.
+9. Existing S3 files are not overwritten.
+
+When I say "continue my PostgreSQL-to-S3 PySpark project", use this context.

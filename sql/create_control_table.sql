@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS etl_processed_orders (
+    order_id BIGINT PRIMARY KEY,
+    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
