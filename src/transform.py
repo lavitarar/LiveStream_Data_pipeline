@@ -1,118 +1,26 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import *
+from pyspark.sql.functions import col
 
-
-# def transform_data():
-
-# ----------------------------------------------------------------------------------------------
-
-
-def transform_data(
-    spark,
-    columns,
-    rows
-) -> DataFrame:
-
-    # Create Spark DataFrame
-    df = spark.createDataFrame(
-        rows,
-        columns
-    )
-
+def transform_data(spark, columns, rows) -> DataFrame:
+    df = spark.createDataFrame(rows, columns)
     print(f"Before transformation: {df.count()} records")
 
-    # --------------------------------------------------
-    # 1. Remove duplicate order IDs
-    # --------------------------------------------------
+    # Convert Data Types
+    df = df.withColumn("order_id",col("order_id").cast("integer"))
+    df = df.withColumn("order_date",col("order_date").cast("string"))
+    df = df.withColumn("order_customer_id",col("order_customer_id").cast("integer"))
+    df = df.withColumn("order_status",col("order_status").cast("string"))
 
+    # Drop NULL values
+    df = df.dropna()
+
+    # Remove duplicate order_id
     df = df.dropDuplicates(["order_id"])
 
-    # --------------------------------------------------
-    # 2. Convert data types
-    # --------------------------------------------------
-
-    df = df.withColumn(
-        "order_id",
-        col("order_id").cast("long")
-    )
-
-    df = df.withColumn(
-        "customer_id",
-        col("customer_id").cast("long")
-    )
-
-    df = df.withColumn(
-        "product_id",
-        col("product_id").cast("long")
-    )
-
-    df = df.withColumn(
-        "quantity",
-        col("quantity").cast("integer")
-    )
-
-    df = df.withColumn(
-        "price",
-        col("price").cast("double")
-    )
-
-    # --------------------------------------------------
-    # 3. Handle NULL values
-    # --------------------------------------------------
-
-    df = df.withColumn(
-        "quantity",
-        coalesce(
-            col("quantity"),
-            lit(0)
-        )
-    )
-
-    df = df.withColumn(
-        "price",
-        coalesce(
-            col("price"),
-            lit(0.0)
-        )
-    )
-
-    # --------------------------------------------------
-    # 4. Clean order date
-    # --------------------------------------------------
-
-    df = df.withColumn(
-        "order_date",
-        to_date(col("order_date"))
-    )
-
-    # --------------------------------------------------
-    # 5. Create total amount
-    # --------------------------------------------------
-
-    df = df.withColumn(
-        "total_amount",
-        round(
-            col("quantity") * col("price"),
-            2
-        )
-    )
-
-    # --------------------------------------------------
-    # 6. Select final columns
-    # --------------------------------------------------
-
-    df = df.select(
-        "order_id",
-        "customer_id",
-        "product_id",
-        "quantity",
-        "price",
-        "order_date",
-        "total_amount"
-    )
-
-    print(
-        f"After transformation: {df.count()} records"
-    )
+    # Select final columns
+    df = df.select("order_id","order_date","order_customer_id","order_status")
+    print(f"After transformation: {df.count()} records")
 
     return df
+
+

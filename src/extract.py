@@ -1,5 +1,3 @@
-
-
 from db_connection  import get_db_connection
 
 def extract_new_data():
