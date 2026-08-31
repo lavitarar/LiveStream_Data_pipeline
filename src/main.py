@@ -1,7 +1,5 @@
 import os
-
 from pyspark.sql import SparkSession
-
 from extract import extract_new_data
 from transform import transform_data
 from s3_upload import upload_to_s3
