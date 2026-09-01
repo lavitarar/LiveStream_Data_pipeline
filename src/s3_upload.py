@@ -3,12 +3,15 @@ import shutil
 import tempfile
 import boto3
 from datetime import datetime
+from dotenv import load_dotenv
 
-def upload_to_s3(df):
+load_dotenv()
+
+def upload_to_s3(df, total_records):
     bucket = os.getenv("S3_BUCKET")
     prefix=os.getenv("S3_PREFIX","source_file/")
     batch_size = 200
-    total_records = df.count()
+    # total_records = df.rdd.getNumPartitions()
 
     if total_records ==0:
         print("No Records Found!")
@@ -57,6 +60,10 @@ def upload_to_s3(df):
             #S3 Filaname
             s3_key = f"{prefix}part-00000_orders_{batch_number}.csv"
             s3=boto3.client("s3",region_name=os.getenv("AWS_REGION"))
+
+            print(type(csv_file))
+            print(type(bucket))
+            print(type(s3_key))   
 
             s3.upload_file(csv_file,bucket,s3_key)
             print(f"Uploaded: s3://{bucket}/{s3_key}")
