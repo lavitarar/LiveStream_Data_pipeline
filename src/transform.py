@@ -16,11 +16,6 @@ def transform_data(spark, columns, rows) -> DataFrame:
 
     df = df.dropna()
     df = df.dropDuplicates(["order_id"])
-    df = df.select(
-        "order_id",
-        "order_date",
-        "order_customer_id",
-        "order_status"
-    )
+    df = df.select("order_id","order_date","order_customer_id","order_status")
 
     return df

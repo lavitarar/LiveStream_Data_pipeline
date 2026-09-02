@@ -40,9 +40,21 @@ def upload_to_s3(df, total_records):
                 continue
 
             batch_path = os.path.join(temp_directory,f"batch_{batch_number}")
+            print("Batch path:", batch_path)
+            print("Batch count:", batch_count)
 
-            (batch_df.coalesce(1).write.mode("overwrite")
+            print("Batch schema:")
+            batch_df.printSchema()
+            print("Batch data:")
+            batch_df.show(5, truncate=False)
+
+            try:
+               (batch_df.coalesce(1).write.mode("overwrite")
                 .option("header","true").csv(batch_path))
+            except Exception as e:
+                print("Error While Writing CSV")
+                print(e)
+                raise
 
             csv_file = None
 
